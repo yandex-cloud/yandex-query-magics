@@ -26,7 +26,7 @@ def yandex_query(yq_httpserver: HTTPServer,
     base_api_url = yq_httpserver.url_for("/")
     base_iam_url = iam_httpserver.url_for("/")
     yq = YandexQuery(base_api_url=base_api_url, base_iam_url=base_iam_url)
-    yq.set_service_account_key(TEST_SA_KEY)
+    yq.set_service_account_key_auth(TEST_SA_KEY)
     return yq
 
 
