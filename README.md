@@ -17,7 +17,14 @@ yandex_query_magic was created to:
 
 Install pip package:
 ```
-%pip install yandex_query_magic --upgrade --quiet
+%pip install yandex-query-magic --upgrade --quiet
+```
+
+Install Jupyter Extensions if not installed:
+
+```
+%pip install  jupyter_nbextensions_configurator
+%pip install  jupyter_contrib_nbextensions
 ```
 
 Enable jupyter extension for UI controls in Jupyter Notebooks:
@@ -28,15 +35,20 @@ Enable jupyter extension for UI controls in Jupyter Notebooks:
 Run extension in Jupyter Notebook:
 ```
 %load_ext yandex_query_magic
-%yq_settings --folder-id b1ggt6geu4aa38p61kst
+%yq_settings --folder-id <yandex_cloud_folder_id>
 %yq select 1
+```
+
+Example:
+```
+%yq_settings --folder-id b1gjt6giu4aa48p61ust
 ```
 
 ## Usage
 
 ### Global settings
 Example:
-```%yq_settings --folder-id b1ggt6geu4aa38p61kst```
+```%yq_settings --folder-id <yandex_cloud_folder_id>```
 
 
 Parameters:
@@ -57,7 +69,7 @@ Here `%yq` is the magic's name and ```select 1``` is the query text.
 ### Advanced usage
 
 ```sql
-%yq --folder-id b1ggt6geu4aa38p61kst --name "My query" --description "Test query" --raw-results
+%yq --folder-id <yandex_cloud_folder_id> --name "My query" --description "Test query" --raw-results
 
 select col1, count(*) from table group by col1
 ```
