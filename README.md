@@ -8,40 +8,39 @@ Yandex Query cell (%%yq) and line (%yq) magics for Jupyter and VSCode
 
 yandex_query_magic was created to:
 
-1. Yandex Query magics for Jupyter Notebook simplify the process of writing and executing queries directly within notebooks, enhancing productivity and interactive data exploration.
+1. Yandex Query magics for Jupyter Lab/Notebook simplify the process of writing and executing queries directly within notebooks, enhancing productivity and interactive data exploration.
 2. They enable seamless integration with Yandex Query services, allowing users to effortlessly access and analyze large datasets hosted on Yandex’s cloud platform without leaving the Jupyter environment.
 3. By providing shortcuts for common operations and queries, these magics reduce the necessity for boilerplate code, making data analysis workflows more efficient and user-friendly.
 
 
-## Quick Start
+## Installation
 
 Install pip package:
 ```
-%pip install yandex-query-magic --upgrade --quiet
+%pip install yandex_query_magic --upgrade --quiet
 ```
 
-Install Jupyter Extensions if not installed:
+### Jupyter Lab
 
-```
-%pip install  jupyter_nbextensions_configurator
-%pip install  jupyter_contrib_nbextensions
-```
+Nothing more needs to be done, Jupyter Lab contains everything.
+
+### Jupyter Notebook
 
 Enable jupyter extension for UI controls in Jupyter Notebooks:
 ```
 %jupyter contrib nbextension install --user
 ```
 
-Run extension in Jupyter Notebook:
+If you encounter "No module named 'notebook.base'" error, consider switching to Jupyter notebook version 6.4.12.
+Discussion can be found [at Stackoverflow](https://stackoverflow.com/questions/76893872/modulenotfounderror-no-module-named-notebook-base-when-installing-nbextension).
+
+### Check the extension
+
+Run extension in Jupyter:
 ```
 %load_ext yandex_query_magic
 %yq_settings --folder-id <yandex_cloud_folder_id>
 %yq select 1
-```
-
-Example:
-```
-%yq_settings --folder-id b1gjt6giu4aa48p61ust
 ```
 
 ## Usage
@@ -50,6 +49,9 @@ Example:
 Example:
 ```%yq_settings --folder-id <yandex_cloud_folder_id>```
 
+i.e.
+
+```%yq_settings --folder-id b1gjt6gku4aa28p61fst```
 
 Parameters:
 - `--folder-id <folder_id>`: **Required**. Default folder to execute Yandex Query queries.
@@ -69,7 +71,7 @@ Here `%yq` is the magic's name and ```select 1``` is the query text.
 ### Advanced usage
 
 ```sql
-%yq --folder-id <yandex_cloud_folder_id> --name "My query" --description "Test query" --raw-results
+%yq --folder-id b1ggt6geu4aa38p61kst --name "My query" --description "Test query" --raw-results
 
 select col1, count(*) from table group by col1
 ```
