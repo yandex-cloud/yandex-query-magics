@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "yandex-query-magic"
-version = "0.1"
+version = "0.2"
 authors = [
   { email="cloud@support.yandex.ru" },
 ]
@@ -45,4 +45,3 @@ test = [
 [project.urls]
 Homepage = "https://github.com/yandex-cloud/yandex-query-magics"
 Issues = "https://github.com/yandex-cloud/yandex-query-magics/issues"
-
