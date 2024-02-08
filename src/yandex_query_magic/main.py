@@ -7,12 +7,14 @@ import aiohttp
 import dateutil.parser
 from enum import Enum
 from .query_results import YandexQueryResults
-from typing import Optional, Callable, Any
+from typing import Optional, Callable, Any, Dict
 from aiohttp_retry import RandomRetry, RetryClient
+from datetime import datetime
 
 
 class YandexQueryException(Exception):
-    "Specific exception for YQ query execution"
+    """Specific exception for YQ query execution"""
+
     def __init__(self, issues):
         self.issues = issues
 
@@ -21,20 +23,23 @@ class YandexQueryException(Exception):
 
 
 class YandexQuery():
-    "Execute queries in YQ"
+    """Execute queries in YQ"""
 
     def __init__(self,
                  base_api_url: str = "https://api.yandex-query.cloud.yandex.net/api/",  # noqa: E501
-                 base_iam_url: str = "https://iam.api.cloud.yandex.net"):
+                 base_iam_url: str = "https://iam.api.cloud.yandex.net",
+                 base_vm_metadata_url: str = "http://169.254.169.254/computeMetadata/v1/"):  # noqa: E501
         self.service_account_key = None
         self.base_api_url = base_api_url
         self.base_iam_url = base_iam_url
+        self.base_vm_metadata_url = base_vm_metadata_url
         self.auth_type = YandexQuery.AuthType.VM
 
     # https://cloud.yandex.com/en/docs/serverless-containers/operations/sa
     async def _resolve_vm_account_key(self) -> str:
-        "Resolves IAM token in current VM"
-        url = 'http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/token'  # noqa: E501
+        """Resolves IAM token in current VM"""
+
+        url = urljoin(self.base_vm_metadata_url, '/instance/service-accounts/default/token')  # noqa: E501
         headers = {'Metadata-Flavor': 'Google'}
 
         async with await self.create_async_session(headers=headers) as session:
@@ -43,8 +48,9 @@ class YandexQuery():
                 return resp["access_token"]
 
     # https://cloud.yandex.com/en/docs/iam/operations/iam-token/create-for-sa#get-iam-token
-    async def _resolve_service_account_key(self, sa_info) -> str:
-        "Resolves IAM tokey by service account key"
+    async def _resolve_service_account_key(self, sa_info: Dict[str,str] ) -> str:
+        """Resolves IAM tokey by service account key"""
+
         async with await self.create_async_session() as session:
             api = urljoin(self.base_iam_url, "/iam/v1/tokens")
 
@@ -71,7 +77,8 @@ class YandexQuery():
                 return resp["iamToken"]
 
     async def _get_iam_token(self) -> str:
-        "Obtains new IAM account"
+        """Obtains new IAM account"""
+
         if self.auth_type == YandexQuery.AuthType.VM:
             return await self._resolve_vm_account_key()
         else:
@@ -90,18 +97,21 @@ class YandexQuery():
         _headers["User-Agent"] = "Jupyter yandex_query_magic"
         return _headers
 
-    def set_service_account_key_auth(self, auth_info: str):
-        "Sets auth mode as service account key file"
+    def set_service_account_key_auth(self, auth_info: Dict[str, str]):
+        """Sets auth mode as service account key file"""
+
         self.service_account_key = auth_info
         self.auth_type = YandexQuery.AuthType.SA_KEY_FILE
 
     def set_vm_auth(self):
-        "Sets auth mode as VM auth"
+        """Sets auth mode as VM auth"""
+
         self.service_account_key = None
         self.auth_type = YandexQuery.AuthType.VM
 
     class AuthType(Enum):
-        "Yandex cloud futhorization type"
+        """Yandex cloud authorization type"""
+
         SA_KEY_FILE = 1
         VM = 2
 
@@ -136,7 +146,7 @@ class YandexQuery():
                                    iam_token: Optional[str] = None,
                                    headers: Optional[dict[str, str]] = None)\
             -> aiohttp.ClientSession:
-        "Creates retriable asyncio session"
+        """Creates retriable asyncio session"""
 
         headers = YandexQuery.get_request_url_header_params(iam_token, headers)
         session = aiohttp.ClientSession(headers=headers,
@@ -171,7 +181,7 @@ class YandexQuery():
                            folder_id: str,
                            query_id: str,
                            on_status_update: Callable[[str], None],
-                           on_progress_update: Callable[[int, str], None]) -> str:  # noqa
+                           on_progress_update: Callable[[int, datetime], None]) -> str:  # noqa
         """Wait the query to complete i.e. any status other
         than RUNNING. PENDING
         Reports current status and progress while waiting"""
@@ -268,6 +278,7 @@ class YandexQuery():
 
     async def get_query_result(self, folder_id: str, query_id: str) -> Any:
         """Retrieves all query results"""
+
         iam_token = await self._get_iam_token()
         query_info = await self.get_queryinfo(folder_id, query_id, iam_token)
 
@@ -287,7 +298,8 @@ class YandexQuery():
 
     # https://cloud.yandex.com/en/docs/query/api/methods/stop-query
     async def stop_query(self, folder_id: str, query_id: str) -> None:
-        "Stops the query"
+        """Stops the query"""
+
         iam_token = await self._get_iam_token()
 
         async with await self.create_async_session(iam_token) as session:

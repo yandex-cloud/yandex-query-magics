@@ -1,6 +1,7 @@
 import re
 from datetime import datetime
 import pandas as pd
+from typing import Any
 
 
 class SqlParser:
@@ -50,13 +51,17 @@ class SqlParser:
 
     @staticmethod
     def from_datetime64_ns(value):
-        formatted = f'DateTime::MakeDatetime(DateTime::Parse("%Y-%m-%d %H:%M:%S")("{value}"))'  # noqa
+        if value.nanosecond != 0:
+            raise Exception("No support for nanoseconds of Pandas datetime64")
+
+        value_str = value.strftime("%Y-%m-%d %H:%M:%S.%f")
+        formatted = f'DateTime::MakeTimestamp(DateTime::Parse("%Y-%m-%d %H:%M:%S")("{value_str}"))'  # noqa
         return formatted
 
     @staticmethod
     def from_datetime(value):
-        value_str = value.strftime("%Y-%m-%d %H:%M:%S")
-        formatted = f'DateTime::MakeDatetime(DateTime::Parse("%Y-%m-%d %H:%M:%S")("{value_str}"))'  # noqa
+        value_str = value.strftime("%Y-%m-%d %H:%M:%S.%f")
+        formatted = f'DateTime::MakeTimestamp(DateTime::Parse("%Y-%m-%d %H:%M:%S")("{value_str}"))'  # noqa
         return formatted
 
     @staticmethod
@@ -65,20 +70,34 @@ class SqlParser:
         return f"\"{value}\""
 
     @staticmethod
+    def from_int(value):
+        return f"{value}l"
+
+    @staticmethod
+    def render_value(value:Any)->str:
+        if isinstance(value, str):
+            value = SqlParser.from_str(value)
+        elif isinstance(value, int):
+            value = SqlParser.from_int(value)
+        elif isinstance(value, pd._libs.tslibs.timestamps.Timestamp):
+            value = SqlParser.from_datetime64_ns(value)
+        elif isinstance(value, datetime):
+            value = SqlParser.from_datetime(value)
+        elif isinstance(value, float):
+            pass
+        else:
+            assert not f"Unsupported  type {type(value)}"
+
+        return value
+
+    @staticmethod
     def render_dict(dict_value: dict) -> str:
         sql = "AS_TABLE(AsList(AsStruct("
 
         as_struct_cols = []
 
         for key, value in dict_value.items():
-            if isinstance(value, str):
-                value = SqlParser.from_str(value)
-            elif isinstance(value, datetime):
-                value = SqlParser.from_datetime(value)
-            elif isinstance(value, float) or isinstance(value, int):
-                pass
-            else:
-                assert not f"Unsupported  type {type(value)}"
+            value = SqlParser.render_value(value)
 
             as_struct_cols.append(f"{value} as `{key}`")
 
@@ -87,7 +106,6 @@ class SqlParser:
 
         return sql
 
-
     @staticmethod
     def render_list(list_value: list) -> str:
         sql = "AsList("
@@ -95,14 +113,7 @@ class SqlParser:
         as_list_items = []
 
         for value in list_value:
-            if isinstance(value, str):
-                value = SqlParser.from_str(value)
-            elif isinstance(value, datetime):
-                value = SqlParser.from_datetime(value)
-            elif isinstance(value, float) or isinstance(value, int):
-                pass
-            else:
-                assert not f"Unsupported  type {type(value)}"
+            value = SqlParser.render_value(value)
 
             as_list_items.append(str(value))
 
@@ -123,15 +134,7 @@ class SqlParser:
         for _, row in df.iterrows():
             as_struct_cols = []
             for index, (_, value) in enumerate(row.items()):
-
-                if isinstance(value, float) or isinstance(value, int):
-                    pass
-                elif isinstance(value, str):
-                    value = SqlParser.from_str(value)
-                elif isinstance(value, pd._libs.tslibs.timestamps.Timestamp):
-                    value = SqlParser.from_datetime64_ns(value)
-                else:
-                    assert not f"Unsupported object type {type(value)}"
+                value = SqlParser.render_value(value)
 
                 as_struct_cols.append(f"{value} as `{columns[index]}`")
 

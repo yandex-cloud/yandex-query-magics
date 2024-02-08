@@ -21,18 +21,34 @@ TEST_SA_KEY = {
 
 @pytest.fixture(scope="function")
 def yandex_query(yq_httpserver: HTTPServer,
-                 iam_httpserver: HTTPServer) -> YandexQuery:
+                 iam_httpserver: HTTPServer,
+                 vm_httpserver: HTTPServer) -> YandexQuery:
 
     base_api_url = yq_httpserver.url_for("/")
     base_iam_url = iam_httpserver.url_for("/")
-    yq = YandexQuery(base_api_url=base_api_url, base_iam_url=base_iam_url)
+    base_vm_url = vm_httpserver.url_for("/")
+
+    yq = YandexQuery(base_api_url=base_api_url,
+                     base_iam_url=base_iam_url,
+                     base_vm_metadata_url=base_vm_url)
+
     yq.set_service_account_key_auth(TEST_SA_KEY)
     return yq
 
 
 @pytest.fixture(scope="function")
 def yq_httpserver() -> HTTPServer:
-    "Main YQ HTTP-server"
+    """Main YQ HTTP-server"""
+
+    server = HTTPServer()
+    server.start()
+    yield server
+    server.stop()
+
+
+@pytest.fixture(scope="function")
+def vm_httpserver() -> HTTPServer:
+    """Main YQ HTTP-server"""
 
     server = HTTPServer()
     server.start()
@@ -42,7 +58,7 @@ def yq_httpserver() -> HTTPServer:
 
 @pytest.fixture(scope="function")
 def iam_httpserver() -> HTTPServer:
-    "IAM HTTP-server"
+    """IAM HTTP-server"""
 
     server = HTTPServer()
     server.start()
@@ -53,7 +69,7 @@ def iam_httpserver() -> HTTPServer:
 
 @pytest.mark.asyncio
 async def test_auth(iam_httpserver: HTTPServer, yandex_query: YandexQuery):
-    "Tests Yandex Cloud IAM integration"
+    """Tests Yandex Cloud IAM integration"""
 
     assert yandex_query is not None
     api = iam_httpserver.url_for("/iam/v1/tokens")
@@ -81,7 +97,7 @@ async def test_auth(iam_httpserver: HTTPServer, yandex_query: YandexQuery):
 @pytest.mark.asyncio
 async def test_auth_timeout(iam_httpserver: HTTPServer,
                             yandex_query: YandexQuery):
-    "Tests Yandex Cloud IAM timeouts"
+    """Tests Yandex Cloud IAM timeouts"""
 
     assert yandex_query is not None
 
@@ -105,7 +121,8 @@ async def test_auth_timeout(iam_httpserver: HTTPServer,
 async def test_user_agent(iam_httpserver: HTTPServer,
                           yq_httpserver: HTTPServer,
                           yandex_query: YandexQuery):
-    "Tests happy path to create query"
+    """Tests happy path to create query"""
+
     assert yandex_query is not None
 
     folder_id = "folder_id"
@@ -145,7 +162,8 @@ async def test_user_agent(iam_httpserver: HTTPServer,
 async def test_query(iam_httpserver: HTTPServer,
                      yq_httpserver: HTTPServer,
                      yandex_query: YandexQuery):
-    "Tests happy path to create query"
+    """Tests happy path to create query"""
+
     assert yandex_query is not None
 
     folder_id = "folder_id"
@@ -183,7 +201,8 @@ async def test_query(iam_httpserver: HTTPServer,
 async def test_get_query_status(iam_httpserver: HTTPServer,
                                 yq_httpserver: HTTPServer,
                                 yandex_query: YandexQuery):
-    "Tests get-query-status happy path command"
+    """Tests get-query-status happy path command"""
+
     assert yandex_query is not None
 
     folder_id = "folder_id"
@@ -209,7 +228,8 @@ async def test_get_query_status(iam_httpserver: HTTPServer,
 async def test_get_query_info(iam_httpserver: HTTPServer,
                               yq_httpserver: HTTPServer,
                               yandex_query: YandexQuery):
-    "Tests happy path for get-query-info command"
+    """Tests happy path for get-query-info command"""
+
     assert yandex_query is not None
 
     folder_id = "folder_id"
@@ -235,7 +255,7 @@ async def test_get_query_info(iam_httpserver: HTTPServer,
 async def test_get_query_status_timedout(iam_httpserver: HTTPServer,
                                          yq_httpserver: HTTPServer,
                                          yandex_query: YandexQuery):
-    "Tests timeout for get-query-status command"
+    """Tests timeout for get-query-status command"""
 
     assert yandex_query is not None
 
@@ -281,7 +301,7 @@ async def test_get_query_status_timedout(iam_httpserver: HTTPServer,
 async def test_wait_results_complete(iam_httpserver: HTTPServer,
                                      yq_httpserver: HTTPServer,
                                      yandex_query: YandexQuery):
-    "Tests happy path for long wait_results process"
+    """Tests happy path for long wait_results process"""
 
     assert yandex_query is not None
 
@@ -339,7 +359,7 @@ async def test_wait_results_complete(iam_httpserver: HTTPServer,
 async def test_get_query_result_bad_status(iam_httpserver: HTTPServer,
                                            yq_httpserver: HTTPServer,
                                            yandex_query: YandexQuery):
-    "Checks that get-query-result throws exception if query execution failed"
+    """Checks that get-query-result throws exception if query execution failed"""
 
     assert yandex_query is not None
 
@@ -365,7 +385,7 @@ async def test_get_query_result_bad_status(iam_httpserver: HTTPServer,
 async def test_get_query_results(iam_httpserver: HTTPServer,
                                  yq_httpserver: HTTPServer,
                                  yandex_query: YandexQuery):
-    "Checks corectness of simple get-query-result command"
+    """Checks corectness of simple get-query-result command"""
     assert yandex_query is not None
 
     def result_response():
@@ -400,7 +420,7 @@ async def test_get_query_results(iam_httpserver: HTTPServer,
 async def test_get_query_big_results(iam_httpserver: HTTPServer,
                                      yq_httpserver: HTTPServer,
                                      yandex_query: YandexQuery):
-    "Tests multipage response and limit-offset listing of results"
+    """Tests multipage response and limit-offset listing of results"""
 
     assert yandex_query is not None
 
@@ -449,7 +469,7 @@ async def test_get_query_big_results(iam_httpserver: HTTPServer,
 async def test_get_query_result_multiple_resultsets(iam_httpserver: HTTPServer,
                                                     yq_httpserver: HTTPServer,
                                                     yandex_query: YandexQuery):
-    "Tests multipage response, limit-offset and multi resultset response"
+    """Tests multipage response, limit-offset and multi resultset response"""
     assert yandex_query is not None
 
     started_at = datetime.datetime.now().isoformat()
@@ -543,3 +563,36 @@ async def test_get_query_result_multiple_resultsets(iam_httpserver: HTTPServer,
     # Checks the results of second result set
     assert len(result.results[1]["rows"]) == 3999
     assert result.results[1]["rows"] == [[value] for value in range(999, 3999+999)]  # noqa
+
+
+@pytest.mark.asyncio
+async def test_vm_auth(iam_httpserver: HTTPServer,
+                       yandex_query: YandexQuery,
+                       vm_httpserver: HTTPServer):
+    """Tests Yandex Cloud VM authentication"""
+
+    assert yandex_query is not None
+    vm_httpserver.expect_request("/instance/service-accounts/default/token",
+                                 method="GET",
+                                 headers={"Metadata-Flavor": "Google"}).\
+        respond_with_json({"access_token": "test_iam_token"})
+
+    yandex_query.set_vm_auth()
+    token = await yandex_query._get_iam_token()
+    assert token == "test_iam_token"
+
+
+@pytest.mark.asyncio
+async def test_auth_switch(iam_httpserver: HTTPServer,
+                       yandex_query: YandexQuery,
+                       vm_httpserver: HTTPServer):
+    """Tests switching between Yandex Cloud VM and IAM authentication"""
+
+    yandex_query.set_vm_auth()
+    await test_vm_auth(iam_httpserver, yandex_query, vm_httpserver)
+
+    yandex_query.set_service_account_key_auth(TEST_SA_KEY)
+    await test_auth(iam_httpserver, yandex_query)
+
+    yandex_query.set_vm_auth()
+    await test_vm_auth(iam_httpserver, yandex_query, vm_httpserver)

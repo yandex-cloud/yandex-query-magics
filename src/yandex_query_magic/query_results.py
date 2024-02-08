@@ -8,7 +8,7 @@ import re
 
 
 class YandexQueryResults:
-    "Holds and formats query execution results"
+    """Holds and formats query execution results"""
 
     Optional_Regexp = re.compile("Optional<(.*)>")
 
@@ -59,7 +59,8 @@ class YandexQueryResults:
 
     @staticmethod
     def _get_converter(column_type):
-        "Returns converter based on column type"
+        """Returns converter based on column type"""
+
         converter = None
 
         if column_type == "String":

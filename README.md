@@ -43,22 +43,20 @@ Run extension in Jupyter:
 %yq select 1
 ```
 
+i.e.
+
+```%yq_settings --folder-id b1gjt6gku4aa28p61fst```
+
 ## Usage
 
 ### Global settings
 Example:
 ```%yq_settings --folder-id <yandex_cloud_folder_id>```
 
-i.e.
-
-```%yq_settings --folder-id b1gjt6gku4aa28p61fst```
-
 Parameters:
 - `--folder-id <folder_id>`: **Required**. Default folder to execute Yandex Query queries.
 - `--vm-auth`: **Default mode**. If set sets authentication mode to VM account key. See [more](https://cloud.yandex.com/en/docs/serverless-containers/operations/sa).
 - `--sa-file-auth <sa_key.json>`: If set sets authentication mode to authorized keys. See [more](https://cloud.yandex.com/en/docs/iam/operations/authorized-key/create).
-
-## Usage Details
 
 ### Basic usage
 
@@ -71,7 +69,7 @@ Here `%yq` is the magic's name and ```select 1``` is the query text.
 ### Advanced usage
 
 ```sql
-%yq --folder-id b1ggt6geu4aa38p61kst --name "My query" --description "Test query" --raw-results
+%%yq --folder-id b1ggt6geu4aa38p61kst --name "My query" --description "Test query" --raw-results
 
 select col1, count(*) from table group by col1
 ```
@@ -89,7 +87,7 @@ yandex_query_magics support several ways of variables expansion.
 #### Jinja2 templates
 
 ```sql
-%yq <other parameters> --jinja2
+%%yq <other parameters> --jinja2
 
 select * from table where col1 like "{{val}}"
 ```
@@ -116,7 +114,7 @@ Then `df` can be used as variable in YQ queries. While running DataFrame is crea
 select * from mytable inner join {{df}} on mytable.id=df._int
 ```
 
-Currently supported Dataframe types:
+Currently supported Pandas types:
 - int64
 - float64
 - datetime64[ns]
@@ -186,7 +184,6 @@ Currently supported types:
 Line Magics can be captured with assignment:
 
 ```
-# These are equivalent:
 varname = %yq <query>
 ```
 

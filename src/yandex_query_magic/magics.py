@@ -25,7 +25,7 @@ nest_asyncio.apply()
 
 @magics_class
 class YQMagics(Magics):
-    "Main class for Jupyter magics interop"
+    """Main class for Jupyter magics interop"""
 
     DefaultFolderId = None  # default folder to be used between queries
     Sa_info = None  # authentication token to be used between queries
@@ -136,14 +136,14 @@ class YQMagics(Magics):
             with ui_events() as ui_poll:
                 ui_poll(1)
 
-        async def abort_query_async(query_id: str) -> None:
+        async def abort_query_async(query_id_: str) -> None:
             try:
-                await yq.stop_query(folder_id, query_id)
-            except Exception as ex:
-                stop_status.value = str(ex)
+                await yq.stop_query(folder_id, query_id_)
+            except Exception as stop_ex:
+                stop_status.value = str(stop_ex)
 
         # Callback to stop the query
-        def abort_query(b):
+        def abort_query(_):
             loop.create_task(abort_query_async(query_id))
 
         abort_query_button.on_click(abort_query)
@@ -277,7 +277,7 @@ class YQMagics(Magics):
             query = parser.reformat(query, user_ns)
 
         loop = asyncio.get_event_loop()
-        query_result = None
+
         query_result = loop.run_until_complete(
             self.yq_execute_query(args.folder_id,
                                   query, args.name,
