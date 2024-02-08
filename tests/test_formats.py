@@ -65,3 +65,21 @@ def test_timestamp_optional():
                                       data=[datetime(2019, 9, 16,
                                                      tzinfo=timezone(
                                                          offset=timedelta(seconds=0)))]))  # noqa
+
+
+def test_timestamp_microseconds():
+    data = [{'rows': [['2024-02-08T19:14:27.986418Z']], 'columns': [
+        {'name': 'column0',
+         'type': 'Timestamp'}]}]
+
+    parsed = YandexQueryResults(data).to_dataframe()
+    assert parsed.equals(pd.DataFrame(columns=["column0"],
+                                      data=[datetime(year=2024,
+                                                     month=2,
+                                                     day=8,
+                                                     hour=19,
+                                                     minute=14,
+                                                     second=27,
+                                                     microsecond=986418,
+                                                     tzinfo=timezone(
+                                                         offset=timedelta(seconds=0)))]))  # noqa

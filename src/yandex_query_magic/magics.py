@@ -13,7 +13,7 @@ from jupyter_ui_poll import ui_events
 import asyncio
 import ipywidgets as widgets
 from datetime import datetime
-from yandex_query_magic import jinja_template
+from .jinja_template import JinjaTemplate
 from typing import Optional, Dict
 from .ipythondisplay import IpythonDisplay
 import nest_asyncio
@@ -65,6 +65,9 @@ class YQMagics(Magics):
 
         if folder_id is None:
             folder_id = YQMagics.DefaultFolderId
+
+        if folder_id is None:
+            folder_id = await YandexQuery().resolve_vm_folder_id()
 
         if folder_id is None:
             print("Folder id is not specified. "
@@ -193,6 +196,10 @@ class YQMagics(Magics):
                         progress.description = query_status
                         progress.bar_style = "danger"
 
+                        if "issues" in query_info:
+                            issues.value = json.dumps(query_info["issues"])
+                            issues.layout.display = 'block'
+
                 # If YQ query execution happened, show details
                 except YandexQueryException as ex:
                     issues.value = ex.issues.__repr__()
@@ -269,7 +276,7 @@ class YQMagics(Magics):
         query = f"{rest}\n{cell}".strip()
 
         if args.jinja2:
-            query = jinja_template.apply_template(query, user_ns)
+            query = JinjaTemplate.apply_template(query, user_ns)
         elif args.no_var_expansion:
             pass
         else:

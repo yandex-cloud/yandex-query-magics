@@ -35,11 +35,11 @@ class YandexQuery():
         self.base_vm_metadata_url = base_vm_metadata_url
         self.auth_type = YandexQuery.AuthType.VM
 
-    # https://cloud.yandex.com/en/docs/serverless-containers/operations/sa
+    # https://cloud.yandex.ru/ru/docs/compute/operations/vm-info/get-info
     async def _resolve_vm_account_key(self) -> str:
         """Resolves IAM token in current VM"""
 
-        url = urljoin(self.base_vm_metadata_url, '/instance/service-accounts/default/token')  # noqa: E501
+        url = urljoin(self.base_vm_metadata_url, 'instance/service-accounts/default/token')  # noqa: E501
         headers = {'Metadata-Flavor': 'Google'}
 
         async with await self.create_async_session(headers=headers) as session:
@@ -47,12 +47,24 @@ class YandexQuery():
                 resp = await response.json()
                 return resp["access_token"]
 
+    # https://cloud.yandex.ru/ru/docs/compute/operations/vm-info/get-info
+    async def resolve_vm_folder_id(self) -> str:
+        """Resolves IAM token in current VM"""
+
+        url = urljoin(self.base_vm_metadata_url, 'instance/vendor/?recursive=true')  # noqa: E501
+        headers = {'Metadata-Flavor': 'Google'}
+
+        async with await self.create_async_session(headers=headers) as session:
+            async with session.get(url, raise_for_status=True) as response:
+                resp = await response.json()
+                return resp["folderId"]
+
     # https://cloud.yandex.com/en/docs/iam/operations/iam-token/create-for-sa#get-iam-token
     async def _resolve_service_account_key(self, sa_info: Dict[str,str] ) -> str:
         """Resolves IAM tokey by service account key"""
 
         async with await self.create_async_session() as session:
-            api = urljoin(self.base_iam_url, "/iam/v1/tokens")
+            api = urljoin(self.base_iam_url, "iam/v1/tokens")
 
             now = int(time.time())
             payload = {

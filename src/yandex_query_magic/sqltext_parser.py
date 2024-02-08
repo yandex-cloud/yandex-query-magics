@@ -40,14 +40,21 @@ class SqlParser:
         if isinstance(value, str):
             return value
         elif isinstance(value, pd.DataFrame):
+            if variable_name is None:
+                raise Exception("DataFrame type must have a name")
+
             value = value.copy()
             value.infer_objects()
             return SqlParser.render_dataframe(value) + \
                 " as `" + variable_name + "`"
         elif isinstance(value, dict):
+            if variable_name is None:
+                raise Exception("DataFrame type must have a name")
+
             return SqlParser.render_dict(value) + " as `" + variable_name + "`"
         elif isinstance(value, list):
-            return SqlParser.render_list(value) + " as `" + variable_name + "`"
+            return SqlParser.render_list(value) + \
+                   (" as `" + variable_name + "`" if variable_name is not None else '')
 
     @staticmethod
     def from_datetime64_ns(value):
@@ -74,7 +81,7 @@ class SqlParser:
         return f"{value}l"
 
     @staticmethod
-    def render_value(value:Any)->str:
+    def render_value(value: Any) -> str:
         if isinstance(value, str):
             value = SqlParser.from_str(value)
         elif isinstance(value, int):

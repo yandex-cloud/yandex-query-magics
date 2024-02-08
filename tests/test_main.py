@@ -24,9 +24,9 @@ def yandex_query(yq_httpserver: HTTPServer,
                  iam_httpserver: HTTPServer,
                  vm_httpserver: HTTPServer) -> YandexQuery:
 
-    base_api_url = yq_httpserver.url_for("/")
-    base_iam_url = iam_httpserver.url_for("/")
-    base_vm_url = vm_httpserver.url_for("/")
+    base_api_url = yq_httpserver.url_for("/yq")
+    base_iam_url = iam_httpserver.url_for("/iam")
+    base_vm_url = vm_httpserver.url_for("/vm")
 
     yq = YandexQuery(base_api_url=base_api_url,
                      base_iam_url=base_iam_url,
