@@ -1,3 +1,5 @@
+import os
+
 from .main import YandexQuery, YandexQueryException
 import argparse
 from IPython.core.magic_arguments import (argument,
@@ -75,7 +77,7 @@ class YQMagics(Magics):
         if folder_id is None:
             print("Folder id is not specified. "
                   "Specify it with %yq_settings "
-                  "--folder_id <folder_id> extension")
+                  "--folder-id <folder_id> extension")
             return
 
         # We use rich interaction with UI and async query execution
@@ -262,18 +264,42 @@ class YQMagics(Magics):
     @magic_arguments()
     @argument("--sa-file-auth", help="Authenticate using path to Yandex Cloud static credentials file", type=str)  # noqa
     @argument("--vm-auth", help="Authenticate use VM credentials", action="store_true")  # noqa
+    @argument("--env-auth", help="Authenticate using credentials from environment variable", type=str)  # noqa
     @argument("--folder-id", help="Yandex cloud folder id to run queries", type=str)  # noqa
     def yq_settings(self, line):
         args = parse_argstring(self.yq_settings, line)
 
         if args.vm_auth:
+            loop = asyncio.get_event_loop()
+
+            async def resolve_vm():
+                await YandexQuery().resolve_vm_folder_id()
+
+            try:
+                loop.run_until_complete(resolve_vm)
+            except:
+                self.ipython_display.error(f"Cannot connect to VM cloud agent")
+                return
+
             YQMagics.SA_info = None
         # read file with SA credentials
         elif args.sa_file_auth is not None:
             sa_file = args.sa_file_auth.strip()
+            if not os.path.exists(sa_file) or not os.path.isfile(sa_file):
+                self.ipython_display.error(f"File {args.sa_file_auth} is not found")
+                return
+
             with open(sa_file, "r") as sa_file:
                 sa_info = sa_file.read()
             YQMagics.Sa_info = json.loads(sa_info)
+        elif args.env_auth is not None:
+            env_secret = os.getenv(args.env_auth, None)
+            if env_secret is None:
+                self.ipython_display.error(f"No secret found in environment variable [{args.env_auth}]")
+                return
+
+            print(env_secret)
+            YQMagics.Sa_info = json.loads(env_secret)
 
         if args.folder_id is not None:
             YQMagics.DefaultFolderId = args.folder_id
