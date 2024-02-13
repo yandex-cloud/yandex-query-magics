@@ -93,9 +93,14 @@ class YQMagics(Magics):
         # shows final information about query
         stop_status = widgets.Label("")
 
-        # shows final information about query
+        # shows is truncated status
         is_truncated_label = widgets.Label("")
         is_truncated_label.style.text_color = 'violet'
+
+        # shows only first dataset information
+        several_datasets_label = widgets.Label("")
+        several_datasets_label.style.text_color = 'violet'
+        several_datasets_label.layout.display = 'none'
 
         # aborts execution of the query
         abort_query_button = widgets.Button(description="Abort")
@@ -128,6 +133,7 @@ class YQMagics(Magics):
                  [start_status, stop_status]),
              widgets.HBox(
                  [progress, processed_gb, abort_query_button]),
+             several_datasets_label,
              issues])
 
         # Update status callback from start_execute_query method
@@ -233,8 +239,15 @@ class YQMagics(Magics):
 
         if result is not None:
             if as_dataframe:
-                result = result.to_dataframe()
-            else:
+                result = result.to_dataframes(None)
+                if isinstance(result, list):
+                    if len(result) > 1:
+                        several_datasets_label.value = f"{len(result)} result sets returned";
+                        several_datasets_label.layout.display = 'block'
+
+                    if len(result) >= 1:
+                        result = result[0]
+        else:
                 result = result.raw_results
 
         # Write results to external variable
@@ -302,6 +315,7 @@ class YQMagics(Magics):
                                   query, args.name,
                                   args.description,
                                   not args.raw_results))
+
         return query_result
 
 

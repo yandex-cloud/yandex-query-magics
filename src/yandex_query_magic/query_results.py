@@ -143,9 +143,16 @@ class YandexQueryResults:
             raise ValueError("Object has multiple result sets, "
                              "please specify result set index")
 
-    def to_dataframe(self, index: Optional[int] = 0):
-        if index is not None:
-            return YandexQueryResults._to_dataframe(self.results[index])
+    def to_dataframes(self, index: Optional[int] = 0):
+        self.results  # initialize internal results cache
+
+        if len(self._results) == 0:
+            return None
+        elif index is not None:
+            return YandexQueryResults._to_dataframe(self._results[index])
         else:
-            raise ValueError("Object has multiple result sets, "
-                             "please specify result set index")
+            query_results = []
+            for rs_index in range(0, len(self._results)):
+                query_results.append(YandexQueryResults._to_dataframe(self._results[rs_index]))
+
+            return query_results
