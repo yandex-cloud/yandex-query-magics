@@ -104,7 +104,7 @@ class YandexQuery():
 
         _headers = {} if headers is None else headers
         if iam_token is not None:
-            _headers['Authorization'] = f"{iam_token}"
+            _headers['Authorization'] = f"Bearer {iam_token}"
 
         _headers["User-Agent"] = "Jupyter yandex_query_magic"
         return _headers

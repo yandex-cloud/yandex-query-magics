@@ -65,10 +65,32 @@ def test_sqlrender_df_ns():
 
 
 def test_sqlrender_dict():
-    test_str = "select * from {{a}}"
-    a = {"a": 1, "b": 2.0, "c": "test", "d": datetime(2022, 2, 2, 21, 12, 12)}
+    test_str = "select DictHasItems({{a}})"
+    a = {"a": 1, "b": 2, "c": 3}
     parser = SqlParser()
-    assert parser.reformat(test_str, {"a": a}) == 'select * from AS_TABLE(AsList(AsStruct(1l as `a`,2.0 as `b`,"test" as `c`,DateTime::MakeTimestamp(DateTime::Parse("%Y-%m-%d %H:%M:%S")("2022-02-02 21:12:12.000000")) as `d`))) as `a`'  # noqa
+    formatted = parser.reformat(test_str, {"a": a})
+    print(formatted)
+    assert formatted == 'select DictHasItems(ToDict(AsList(asTuple("a", 1l),asTuple("b", 2l),asTuple("c", 3l))))'  # noqa
+
+
+def test_sqlrender_dict_distinct_value():
+    with pytest.raises(Exception, match="All value types must be of one type. Found several {<class 'datetime.datetime'>, <class 'str'>, <class 'int'>, <class 'float'>}"):  # noqa
+        test_str = "select * from {{a}}"
+        a = {"a": 1, "b": 2.0, "c": "test", "d": datetime(2022, 2, 2, 21, 12, 12)}
+        parser = SqlParser()
+        formatted = parser.reformat(test_str, {"a": a})
+        print(formatted)
+        assert formatted == 'select * from AS_TABLE(AsList(AsStruct(1l as `a`,2.0 as `b`,"test" as `c`,DateTime::MakeTimestamp(DateTime::Parse("%Y-%m-%d %H:%M:%S")("2022-02-02 21:12:12.000000")) as `d`))) as `a`'  # noqa
+
+
+def test_sqlrender_dict_distinct_keys():
+    with pytest.raises(Exception, match="All key types must be of one type. Found several {<class 'str'>, <class 'datetime.datetime'>}"):  # noqa
+        test_str = "select * from {{a}}"
+        a = {"a": 1, "b": 1, "c": 1, datetime.now(): 1}
+        parser = SqlParser()
+        formatted = parser.reformat(test_str, {"a": a})
+        print(formatted)
+        assert formatted == 'select * from AS_TABLE(AsList(AsStruct(1l as `a`,2.0 as `b`,"test" as `c`,DateTime::MakeTimestamp(DateTime::Parse("%Y-%m-%d %H:%M:%S")("2022-02-02 21:12:12.000000")) as `d`))) as `a`'  # noqa
 
 
 def test_sqlrender_list():
@@ -76,7 +98,7 @@ def test_sqlrender_list():
     a = [1, 2, 3]
     parser = SqlParser()
     result = parser.reformat(test_str, {"a": a})
-    assert result == 'select 1 in AsList(1l,2l,3l) as `a`'  # noqa
+    assert result == 'select 1 in AsList(1l,2l,3l)'  # noqa
 
 
 def test_sqlrender_dict_special_symbols():
@@ -84,5 +106,5 @@ def test_sqlrender_dict_special_symbols():
     a = {"a": "abc", "b": "a\"a", "c": "a\'c"}
     parser = SqlParser()
     result = parser.reformat(test_str, {"a": a})
-
-    assert result == """select * from AS_TABLE(AsList(AsStruct("abc" as `a`,"a\\"a" as `b`,"a'c" as `c`))) as `a`"""  # noqa
+    print(result)
+    assert result == """select * from ToDict(AsList(asTuple("a", "abc"),asTuple("b", "a\\"a"),asTuple("c", "a'c")))"""  # noqa

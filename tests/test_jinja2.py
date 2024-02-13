@@ -12,15 +12,15 @@ def test_simple_render():
 def test_render_dict_as_yql():
     sql = "select * from {{dct|to_yq(name='dct')}}"
 
-    rendered = JinjaTemplate.apply_template(sql, {"dct": {"a": 1, "b": "2"}})
-    assert rendered == 'select * from AS_TABLE(AsList(AsStruct(1l as `a`,"2" as `b`))) as `dct`'
+    rendered = JinjaTemplate.apply_template(sql, {"dct": {"a": "1", "b": "2"}})
+    assert rendered == 'select * from ToDict(AsList(asTuple("a", "1"),asTuple("b", "2")))'
 
 
 def test_render_list_as_yql():
     sql = "select * from {{lst|to_yq(name='lst')}}"
 
     rendered = JinjaTemplate.apply_template(sql, {"lst": [1, 2, 3]})
-    assert rendered == 'select * from AsList(1l,2l,3l) as `lst`'
+    assert rendered == 'select * from AsList(1l,2l,3l)'
 
 
 def test_render_list_as_yql_noname():
@@ -45,15 +45,16 @@ def test_render_df_as_yql():
 def test_render_dict_as_yql_jinja():
     sql = """
     {% for item in items %}
-        select * from {{item|to_yq(name='dct'+loop.index|string)}};
+        select {{item|to_yq(name='dct'+loop.index|string)}};
     {% endfor %}
         """
 
     rendered = JinjaTemplate.apply_template(sql, {
         "items":
             [
-                {"a": 1, "b": "2"},
-                {"b": 2, "c": "3"}
+                {"a": 1, "b": 2},
+                {"b": 2, "c": 3}
             ]
     }).strip()
-    assert rendered == 'select * from AS_TABLE(AsList(AsStruct(1l as `a`,"2" as `b`))) as `dct1`;\n    \n        select * from AS_TABLE(AsList(AsStruct(2l as `b`,"3" as `c`))) as `dct2`;'  # noqa
+    required = """select ToDict(AsList(asTuple("a", 1l),asTuple("b", 2l)));\n    \n        select ToDict(AsList(asTuple("b", 2l),asTuple("c", 3l)));"""
+    assert rendered == required  # noqa

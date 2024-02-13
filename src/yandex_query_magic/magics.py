@@ -67,7 +67,10 @@ class YQMagics(Magics):
             folder_id = YQMagics.DefaultFolderId
 
         if folder_id is None:
-            folder_id = await YandexQuery().resolve_vm_folder_id()
+            try:
+                folder_id = await YandexQuery().resolve_vm_folder_id()
+            except:
+                pass
 
         if folder_id is None:
             print("Folder id is not specified. "
@@ -89,6 +92,10 @@ class YQMagics(Magics):
 
         # shows final information about query
         stop_status = widgets.Label("")
+
+        # shows final information about query
+        is_truncated_label = widgets.Label("")
+        is_truncated_label.style.text_color = 'violet'
 
         # aborts execution of the query
         abort_query_button = widgets.Button(description="Abort")
@@ -116,7 +123,7 @@ class YQMagics(Magics):
 
         # UI control layout
         all_widgets = widgets.VBox(
-            [label_query_id,
+            [widgets.HBox([label_query_id, is_truncated_label]),
              widgets.HBox(
                  [start_status, stop_status]),
              widgets.HBox(
@@ -181,6 +188,11 @@ class YQMagics(Magics):
 
                 query_status = query_info["status"]
                 progress.description = query_status
+
+                for resultSet in query_info["result_sets"]:
+                    is_truncated_rs = resultSet.get("truncated", False)
+                    if is_truncated_rs:
+                        is_truncated_label.value = "Results were truncated";
 
                 progress.description = "Fetching results"
 

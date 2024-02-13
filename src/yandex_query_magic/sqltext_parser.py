@@ -51,10 +51,9 @@ class SqlParser:
             if variable_name is None:
                 raise Exception("DataFrame type must have a name")
 
-            return SqlParser.render_dict(value) + " as `" + variable_name + "`"
+            return SqlParser.render_dict(value)
         elif isinstance(value, list):
-            return SqlParser.render_list(value) + \
-                   (" as `" + variable_name + "`" if variable_name is not None else '')
+            return SqlParser.render_list(value)
 
     @staticmethod
     def from_datetime64_ns(value):
@@ -99,17 +98,30 @@ class SqlParser:
 
     @staticmethod
     def render_dict(dict_value: dict) -> str:
-        sql = "AS_TABLE(AsList(AsStruct("
+        sql = "ToDict(AsList("
 
-        as_struct_cols = []
+        as_dict_cols = []
+
+        key_types = set()
+        value_types = set()
+        for key, value in dict_value.items():
+            key_types.add(type(key))
+            value_types.add(type(value))
+
+        if len(key_types) > 1:
+            raise Exception(f"All key types must be of one type. Found several {key_types}")
+
+        if len(value_types) > 1:
+            raise Exception(f"All value types must be of one type. Found several {value_types}")
 
         for key, value in dict_value.items():
+            key = SqlParser.render_value(key)
             value = SqlParser.render_value(value)
 
-            as_struct_cols.append(f"{value} as `{key}`")
+            as_dict_cols.append(f"asTuple({key}, {value})")
 
-        sql += ",".join(as_struct_cols)
-        sql += ")))"
+        sql += ",".join(as_dict_cols)
+        sql += "))"
 
         return sql
 
