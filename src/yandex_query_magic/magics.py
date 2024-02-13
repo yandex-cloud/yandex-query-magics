@@ -298,7 +298,6 @@ class YQMagics(Magics):
                 self.ipython_display.error(f"No secret found in environment variable [{args.env_auth}]")
                 return
 
-            print(env_secret)
             YQMagics.Sa_info = json.loads(env_secret)
 
         if args.folder_id is not None:
