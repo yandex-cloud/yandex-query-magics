@@ -253,8 +253,8 @@ class YQMagics(Magics):
                             result = result[0]
                 else:
                     return result
-        else:
-            result = result.raw_results
+            else:
+                result = result.raw_results
 
         # Write results to external variable
         if variable is not None:
