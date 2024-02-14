@@ -6,7 +6,7 @@ import asyncio
 import aiohttp
 import dateutil.parser
 from enum import Enum
-from .query_results import YandexQueryResults
+from .yq_results import YandexQueryResults
 from typing import Optional, Callable, Any, Dict
 from aiohttp_retry import RandomRetry, RetryClient
 from datetime import datetime
@@ -22,7 +22,7 @@ class YandexQueryException(Exception):
         return super().__str__()
 
 
-class YandexQuery():
+class YandexQuery:
     """Execute queries in YQ"""
 
     def __init__(self,
@@ -60,7 +60,7 @@ class YandexQuery():
                 return resp["folderId"]
 
     # https://cloud.yandex.com/en/docs/iam/operations/iam-token/create-for-sa#get-iam-token
-    async def _resolve_service_account_key(self, sa_info: Dict[str,str] ) -> str:
+    async def _resolve_service_account_key(self, sa_info: Dict[str, str]) -> str:
         """Resolves IAM tokey by service account key"""
 
         async with await self.create_async_session() as session:
@@ -157,7 +157,7 @@ class YandexQuery():
     async def create_async_session(self,
                                    iam_token: Optional[str] = None,
                                    headers: Optional[dict[str, str]] = None)\
-            -> aiohttp.ClientSession:
+            -> RetryClient:
         """Creates retriable asyncio session"""
 
         headers = YandexQuery.get_request_url_header_params(iam_token, headers)
@@ -193,7 +193,7 @@ class YandexQuery():
                            folder_id: str,
                            query_id: str,
                            on_status_update: Callable[[str], None],
-                           on_progress_update: Callable[[int, datetime], None]) -> str:  # noqa
+                           on_progress_update: Callable[[int, datetime], None]) -> Optional[str]:  # noqa
         """Wait the query to complete i.e. any status other
         than RUNNING. PENDING
         Reports current status and progress while waiting"""

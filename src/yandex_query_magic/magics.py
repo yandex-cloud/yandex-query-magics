@@ -42,7 +42,8 @@ class YQMagics(Magics):
                                query_text: str,
                                name: Optional[str] = None,
                                description: Optional[str] = None,
-                               as_dataframe: bool = True) -> None:
+                               as_dataframe: bool = True,
+                               all_results: bool = False) -> None:
 
         yq = YandexQuery()
         if YQMagics.Sa_info is not None:
@@ -200,7 +201,7 @@ class YQMagics(Magics):
                 for resultSet in query_info["result_sets"]:
                     is_truncated_rs = resultSet.get("truncated", False)
                     if is_truncated_rs:
-                        is_truncated_label.value = "Results were truncated";
+                        is_truncated_label.value = "Results were truncated"
 
                 progress.description = "Fetching results"
 
@@ -242,15 +243,18 @@ class YQMagics(Magics):
         if result is not None:
             if as_dataframe:
                 result = result.to_dataframes(None)
-                if isinstance(result, list):
-                    if len(result) > 1:
-                        several_datasets_label.value = f"{len(result)} result sets returned";
-                        several_datasets_label.layout.display = 'block'
+                if not all_results:
+                    if isinstance(result, list):
+                        if len(result) > 1:
+                            several_datasets_label.value = f"{len(result)} result sets returned"
+                            several_datasets_label.layout.display = 'block'
 
-                    if len(result) >= 1:
-                        result = result[0]
+                        if len(result) >= 1:
+                            result = result[0]
+                else:
+                    return result
         else:
-                result = result.raw_results
+            result = result.raw_results
 
         # Write results to external variable
         if variable is not None:
@@ -311,6 +315,7 @@ class YQMagics(Magics):
     @argument("--description", help="Query description", type=str)
     @argument("-j", "--jinja2", help="Apply Jinja2 Template", action="store_true")  # noqa
     @argument("--no-var-expansion", help="Disable {{var}} evaluation", action="store_true")  # noqa
+    @argument("--all-results", help="Return all results, not only first", action="store_true")  # noqa
     @argument("--raw-results", help="Return result as raw YQ response", action='store_true', default=False)  # noqa
     @argument("rest", nargs=argparse.REMAINDER)
     def execute(self, line: Optional[str] = None,
@@ -339,7 +344,8 @@ class YQMagics(Magics):
             self.yq_execute_query(args.folder_id,
                                   query, args.name,
                                   args.description,
-                                  not args.raw_results))
+                                  not args.raw_results,
+                                  args.all_results))
 
         return query_result
 
