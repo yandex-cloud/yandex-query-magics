@@ -101,6 +101,14 @@ def test_sqlrender_list():
     assert result == 'select 1 in AsList(1l,2l,3l)'  # noqa
 
 
+def test_sqlrender_several_values():
+    sql = "select * from {{var}}, {{var2}}"
+
+    parser = SqlParser()
+    rendered = parser.reformat(sql, {"var": 1, "var2": 2})
+    assert rendered == "select * from 1, 2"
+
+
 def test_sqlrender_dict_special_symbols():
     test_str = "select * from {{a}}"
     a = {"a": "abc", "b": "a\"a", "c": "a\'c"}

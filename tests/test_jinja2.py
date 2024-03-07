@@ -9,6 +9,13 @@ def test_simple_render():
     assert rendered == "select * from 1"
 
 
+def test_simple_render_several_vars():
+    sql = "select * from {{var}}, {{var2}}"
+
+    rendered = JinjaTemplate.apply_template(sql, {"var": 1, "var2": 2})
+    assert rendered == "select * from 1, 2"
+
+
 def test_render_dict_as_yql():
     sql = "select * from {{dct|to_yq(name='dct')}}"
 

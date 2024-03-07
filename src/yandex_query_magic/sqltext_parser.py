@@ -5,7 +5,7 @@ from typing import Any
 
 
 class SqlParser:
-    mustache_re = re.compile(r"{{\s*([a-zA-Z_][a-zA-Z0-9_]*)(.*)\s*}}")
+    mustache_re = re.compile(r"{{\s*([a-zA-Z_][a-zA-Z0-9_]*)(.*?)\s*}}")
 
     def __init__(self):
         pass
@@ -54,6 +54,8 @@ class SqlParser:
             return SqlParser.render_dict(value)
         elif isinstance(value, list):
             return SqlParser.render_list(value)
+        else:
+            return value.__str__()
 
     @staticmethod
     def from_datetime64_ns(value):
