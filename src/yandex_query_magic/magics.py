@@ -246,7 +246,7 @@ class YQMagics(Magics):
                 if not all_results:
                     if isinstance(result, list):
                         if len(result) > 1:
-                            several_datasets_label.value = f"{len(result)} result sets returned"
+                            several_datasets_label.value = f"{len(result)} result sets returned. Displaying first one"
                             several_datasets_label.layout.display = 'block'
 
                         if len(result) >= 1:
@@ -329,6 +329,8 @@ class YQMagics(Magics):
 
         rest = " ".join(args.rest)
         query = f"{rest}\n{cell}".strip()
+        if len(query) > 0 and query[-1] == "#":
+            query = query[:-1]
 
         if args.jinja2:
             query = JinjaTemplate.apply_template(query, user_ns)
