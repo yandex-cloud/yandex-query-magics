@@ -111,10 +111,12 @@ class SqlParser:
             value_types.add(type(value))
 
         if len(key_types) > 1:
-            raise Exception(f"All key types must be of one type. Found several {key_types}")
+            raise Exception(f"All key types must be of one type. "
+                            f"Found several {sorted([str(key_type) for key_type in key_types])}")
 
         if len(value_types) > 1:
-            raise Exception(f"All value types must be of one type. Found several {value_types}")
+            raise Exception(f"All value types must be of one type. "
+                            f"Found several {sorted([str(value_type) for value_type in value_types])}")
 
         for key, value in dict_value.items():
             key = SqlParser.render_value(key)

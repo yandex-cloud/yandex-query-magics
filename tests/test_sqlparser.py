@@ -2,6 +2,7 @@ from yandex_query_magic import SqlParser
 import pandas as pd
 from datetime import datetime
 import pytest
+import re
 
 
 def test_sqlrender_noop():
@@ -74,7 +75,7 @@ def test_sqlrender_dict():
 
 
 def test_sqlrender_dict_distinct_value():
-    with pytest.raises(Exception, match="All value types must be of one type. Found several {<class 'datetime.datetime'>, <class 'str'>, <class 'int'>, <class 'float'>}"):  # noqa
+    with pytest.raises(Exception, match=re.escape("All value types must be of one type. Found several [\"<class 'datetime.datetime'>\", \"<class 'float'>\", \"<class 'int'>\", \"<class 'str'>\"]")):  # noqa
         test_str = "select * from {{a}}"
         a = {"a": 1, "b": 2.0, "c": "test", "d": datetime(2022, 2, 2, 21, 12, 12)}
         parser = SqlParser()
@@ -84,7 +85,7 @@ def test_sqlrender_dict_distinct_value():
 
 
 def test_sqlrender_dict_distinct_keys():
-    with pytest.raises(Exception, match="All key types must be of one type. Found several {<class 'str'>, <class 'datetime.datetime'>}"):  # noqa
+    with pytest.raises(Exception, match=re.escape("All key types must be of one type. Found several [\"<class 'datetime.datetime'>\", \"<class 'str'>\"]")):  # noqa
         test_str = "select * from {{a}}"
         a = {"a": 1, "b": 1, "c": 1, datetime.now(): 1}
         parser = SqlParser()

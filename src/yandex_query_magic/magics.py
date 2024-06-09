@@ -246,13 +246,12 @@ class YQMagics(Magics):
                 if not all_results:
                     if isinstance(result, list):
                         if len(result) > 1:
-                            several_datasets_label.value = f"{len(result)} result sets returned. Displaying first one"
+                            several_datasets_label.value = f"{len(result)} result sets returned. Displaying first one. " \
+                                                            "Use --all-results to get all result sets"
                             several_datasets_label.layout.display = 'block'
 
                         if len(result) >= 1:
                             result = result[0]
-                else:
-                    return result
             else:
                 result = result.raw_results
 
